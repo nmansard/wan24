@@ -29,7 +29,7 @@ The third line installs `mim-solvers` using the [AWS channel](https://anaconda.o
 
 You then need to install the following additional tools via pip:
 ```bash
-pip install tqdm meshcat ipython jupyterlab ipywidgets matplotlib`
+pip install tqdm meshcat ipython jupyterlab ipywidgets matplotlib gepetuto`
 ```
 
 ### With PyPI
@@ -54,9 +54,9 @@ This can be done using two virtual environments.
 
     `pip install -U pip`
 
-4. install dependencies:
+    4. install dependencies:
 
-    `pip install example-robot-data-jnrh2023 jupyterlab meshcat ipywidgets matplotlib`
+    `pip install example-robot-data-jnrh2023 jupyterlab meshcat ipywidgets matplotlib gepetuto`
 
 5. when done with the virtual environment, deactivate:
 
@@ -79,7 +79,7 @@ This can be done using two virtual environments.
 
 4. install dependencies:
 
-    `pip install mim-solvers jupyterlab meshcat ipywidgets matplotlib`
+    `pip install mim-solvers jupyterlab meshcat ipywidgets matplotlib gepetuto`
 
 5. when done with the virtual environment, deactivate:
 

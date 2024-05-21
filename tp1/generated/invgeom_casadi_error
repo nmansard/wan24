@@ -1,0 +1,9 @@
+error_tool = casadi.Function(
+    "etool",
+    [cq],
+    [
+        cpin.log6(
+            cdata.oMf[tool_id].inverse() * cpin.SE3(in_world_M_target)
+        ).vector
+    ],
+)

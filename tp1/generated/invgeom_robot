@@ -1,0 +1,3 @@
+robot = robex.load("ur10")
+model = robot.model
+data = robot.data

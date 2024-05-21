@@ -1,4 +1,4 @@
-r"""
+"""
 Stand-alone inverse geometry for a manipulator robot with a 6d objective.
 
 Implement and solve the following nonlinear program:
@@ -9,177 +9,76 @@ target.
 
 The following tools are used:
 - the ur10 model (loaded by example-robot-data)
-- the fmin_bfgs solver of scipy (with finite differences automatically
-  implemented)
+- pinocchio.casadi for writing the problem and computing its derivatives
+- the IpOpt solver wrapped in casadi
 - the meshcat viewer
 """
 
 # %jupyter_snippet imports
 import time
 import unittest
-
 import example_robot_data as robex
-import meshcat
 import numpy as np
+import casadi
 import pinocchio as pin
-from numpy.linalg import norm
-from scipy.optimize import fmin_bfgs
-
+import pinocchio.casadi as cpin
+from wan2024.meshcat_viewer_wrapper import MeshcatVisualizer, colors
 # %end_jupyter_snippet
 
+# --- ROBOT AND VIZUALIZER
+
 # %jupyter_snippet robot
-robot = robex.load("ur5")
-robot.q0 = np.array([0, -np.pi / 2, 0, 0, 0, 0])
+robot = robex.load("ur10")
 model = robot.model
 data = robot.data
 # %end_jupyter_snippet
 
 # %jupyter_snippet visualizer
-viz = pin.visualize.MeshcatVisualizer(
-    robot.model, robot.collision_model, robot.visual_model
-)
-robot.setVisualizer(viz, init=False)
-viz.initViewer(open=False)
-viz.loadViewerModel()
+viz = MeshcatVisualizer(robot)
 viz.display(robot.q0)
 # %end_jupyter_snippet
 
 # %jupyter_snippet task_params
+robot.q0 = np.array([0, -np.pi / 2, 0, 0, 0, 0])
+
 tool_id = model.getFrameId("tool0")
 
-transform_target_to_world = pin.SE3(
+in_world_M_target = pin.SE3(
     pin.utils.rotate("x", np.pi / 4),
     np.array([-0.5, 0.1, 0.2]),
 )
 # %end_jupyter_snippet
 
-
-# %jupyter_snippet error_function
-
-
-def error(q: np.ndarray) -> float:
-    pin.framesForwardKinematics(model, data, q)
-    transform_tool_to_world = data.oMf[tool_id]
-    return norm(
-        pin.log(transform_tool_to_world.inverse() * transform_target_to_world).vector
-    )
-
-
-# %end_jupyter_snippet
-
-
-# %jupyter_snippet meshcat_frame
-def meshcat_frame(
-    handle: meshcat.Visualizer,
-x    axis_length: float = 0.1,
-    axis_thickness: float = 0.005,
-    opacity: float = 1.0,
-    origin_color: int = 0x000000,
-    origin_radius: float = 0.01,
-) -> None:
-    """
-    Set MeshCat handle to a frame, represented by an origin and three axes.
-
-    Args:
-        handle: MeshCat handle to attach the frame to.
-        axis_length: Length of axis unit vectors, in [m].
-        axis_thickness: Thickness of axis unit vectors, in [m].
-        opacity: Opacity of all three unit vectors.
-        origin_color: Color of the origin sphere.
-        origin_radius: Radius of the frame origin sphere, in [m].
-
-    Note:
-        As per the de-facto standard (Blender, OpenRAVE, RViz, ...), the
-        x-axis is red, the y-axis is green and the z-axis is blue.
-    """
-    material = meshcat.geometry.MeshLambertMaterial(color=origin_color, opacity=opacity)
-    sphere = meshcat.geometry.Sphere(origin_radius)
-    handle.set_object(sphere, material)
-    direction_names = ["x", "y", "z"]
-    colors = [0xFF0000, 0x00FF00, 0x0000FF]
-    rotation_axes = [[0, 0, 1], [0, 1, 0], [1, 0, 0]]
-    position_cylinder_in_body = 0.5 * axis_length * np.eye(3)
-    for i in range(3):
-        dir_name = direction_names[i]
-        material = meshcat.geometry.MeshLambertMaterial(
-            color=colors[i], opacity=opacity
-        )
-        transform_cylinder_to_body = meshcat.transformations.rotation_matrix(
-            np.pi / 2, rotation_axes[i]
-        )
-        transform_cylinder_to_body[0:3, 3] = position_cylinder_in_body[i]
-        cylinder = meshcat.geometry.Cylinder(axis_length, axis_thickness)
-        handle[dir_name].set_object(cylinder, material)
-        handle[dir_name].set_transform(transform_cylinder_to_body)
-
-
-# %end_jupyter_snippet
+print("Let's go to pdes ... with casadi")
 
 # %jupyter_snippet visualizer_callback
-viewer = viz.viewer
+# --- Add box to represent target
+# Add a vizualization for the target
+boxID = "world/box"
+viz.addBox(boxID, [0.05, 0.1, 0.2], [1.0, 0.2, 0.2, 0.5])
+# Add a vizualisation for the tip of the arm.
+tipID = "world/blue"
+viz.addBox(tipID, [0.08] * 3, [0.2, 0.2, 1.0, 0.5])
 
-# Target frame (immobile)
-meshcat_frame(viewer["target"], opacity=1.0)
-viewer["target"].set_transform(transform_target_to_world.np)
-
-# Tool frame (mobile)
-meshcat_frame(viewer["tool"], opacity=0.5)
-
-
-def callback(q: np.ndarray):
+def displayProblem(q):
+    """
+    Given the robot configuration, display:
+    - the robot
+    - a box representing tool_id
+    - a box representing in_world_M_target
+    """
     pin.framesForwardKinematics(model, data, q)
-    transform_frame_to_world = data.oMf[tool_id]
-    viewer["tool"].set_transform(transform_frame_to_world.np)
+    in_world_M_tool = data.oMf[tool_id]
+    viz.applyConfiguration(boxID, in_world_M_target)
+    viz.applyConfiguration(tipID, in_world_M_tool)
     viz.display(q)
     time.sleep(1e-1)
-
-
 # %end_jupyter_snippet
 
-
-# %jupyter_snippet fmin_bfgs
-qguess = np.array([0.12, -2.2, -1.45, 1.82, -0.95, 0.17])
-qopt = fmin_bfgs(error, qguess, callback=callback)
-
-print(
-    "The robot finally reached effector placement at\n",
-    robot.placement(qopt, 6),
-)
-# %end_jupyter_snippet
-
-# TEST ZONE ############################################################
-# Some asserts below to check the behavior of this script in stand-alone
-
-
-class InvGeom6DTest(unittest.TestCase):
-    def test_qopt_6d(self):
-        pin.framesForwardKinematics(model, data, qopt)
-        Mopt = data.oMf[tool_id]
-        self.assertTrue(
-            (
-                np.abs(transform_target_to_world.translation - Mopt.translation) < 1e-7
-            ).all()
-        )
-        self.assertTrue(
-            np.allclose(
-                pin.log(transform_target_to_world.inverse() * Mopt).vector,
-                0,
-                atol=1e-6,
-            )
-        )
-
-
-InvGeom6DTest().test_qopt_6d()
-
-# END OF TEST ZONE ############################################################
-
-# %jupyter_snippet casadi_imports
-import casadi
-from pinocchio import casadi as cpin
-
-# %end_jupyter_snippet
+# --- CASADI MODEL AND HELPERS
 
 # %jupyter_snippet casadi_model
+# --- Casadi helpers
 cmodel = cpin.Model(model)
 cdata = cmodel.createData()
 # %end_jupyter_snippet
@@ -198,11 +97,13 @@ error_tool = casadi.Function(
     [cq],
     [
         cpin.log6(
-            cdata.oMf[tool_id].inverse() * cpin.SE3(transform_target_to_world)
+            cdata.oMf[tool_id].inverse() * cpin.SE3(in_world_M_target)
         ).vector
     ],
 )
 # %end_jupyter_snippet
+
+# --- OPTIMIZATION PROBLEM
 
 # %jupyter_snippet casadi_computation_graph
 opti = casadi.Opti()
@@ -213,8 +114,10 @@ totalcost = casadi.sumsqr(error_tool(var_q))
 # %jupyter_snippet ipopt
 opti.minimize(totalcost)
 opti.solver("ipopt")  # select the backend solver
-opti.callback(lambda i: callback(opti.debug.value(var_q)))
+opti.callback(lambda i: displayProblem(opti.debug.value(var_q)))
+# %end_jupyter_snippet
 
+# %jupyter_snippet solve
 # Caution: in case the solver does not converge, we are picking the candidate values
 # at the last iteration in opti.debug, and they are NO guarantee of what they mean.
 try:
