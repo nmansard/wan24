@@ -4,7 +4,8 @@ Stand-alone inverse geometry for a manipulator robot with a 6d objective.
 Implement and solve the following nonlinear program:
 decide q \in R^NQ
 minimizing   || log( M(q)^-1 M^* ||^2
-with M(q) \in SE(3) the placement of the robot end-effector, and M^* the target.
+with M(q) \in SE(3) the placement of the robot end-effector, and M^* the
+target.
 
 The following tools are used:
 - the ur10 model (loaded by example-robot-data)
@@ -13,38 +14,44 @@ The following tools are used:
 - the meshcat viewer
 """
 
+# %jupyter_snippet imports
 import time
-
-import casadi
+import unittest
 import example_robot_data as robex
 import numpy as np
+import casadi
 import pinocchio as pin
-from pinocchio import casadi as cpin
+import pinocchio.casadi as cpin
+from wan2024.meshcat_viewer_wrapper import MeshcatVisualizer, colors
+# %end_jupyter_snippet
 
-from wan2024.meshcat_viewer_wrapper import MeshcatVisualizer
+# --- ROBOT AND VIZUALIZER
 
-# Change numerical print
-pin.SE3.__repr__ = pin.SE3.__str__
-np.set_printoptions(precision=2, linewidth=300, suppress=True, threshold=1e6)
-
-### HYPER PARAMETERS
-Mtarget = pin.SE3(pin.utils.rotate("y", 3), np.array([-0.5, 0.1, 0.2]))  # x,y,z
-q0 = np.array([0, -np.pi / 2, 0, 0, 0, 0])
-
-# --- Load robot model
+# %jupyter_snippet robot
 robot = robex.load("ur10")
-robot.q0 = q0
-# Open the viewer
+model = robot.model
+data = robot.data
+# %end_jupyter_snippet
+
+# %jupyter_snippet visualizer
 viz = MeshcatVisualizer(robot)
 viz.display(robot.q0)
-time.sleep(0.3)
+# %end_jupyter_snippet
+
+# %jupyter_snippet task_params
+robot.q0 = np.array([0, -np.pi / 2, 0, 0, 0, 0])
+
+tool_id = model.getFrameId("tool0")
+
+in_world_M_target = pin.SE3(
+    pin.utils.rotate("x", np.pi / 4),
+    np.array([-0.5, 0.1, 0.2]),
+)
+# %end_jupyter_snippet
+
 print("Let's go to pdes ... with casadi")
 
-# The pinocchio model is what we are really interested by.
-model = robot.model
-data = model.createData()
-idTool = model.getFrameId("tool0")
-
+# %jupyter_snippet visualizer_callback
 # --- Add box to represent target
 # Add a vizualization for the target
 boxID = "world/box"
@@ -54,47 +61,60 @@ viz.addBox(boxID, [0.05, 0.1, 0.2], [1.0, 0.2, 0.2, 0.5])
 tipID = "world/blue"
 viz.addBox(tipID, [0.08] * 3, [0.2, 0.2, 1.0, 0.5])
 
-
 def displayProblem(q):
     """
     Given the robot configuration, display:
     - the robot
-    - a box representing idTool
-    - a box representing Mtarget
+    - a box representing tool_id
+    - a box representing in_world_M_target
     """
     pin.framesForwardKinematics(model, data, q)
-    M = data.oMf[idTool]
-    viz.applyConfiguration(boxID, Mtarget)
-    viz.applyConfiguration(tipID, M)
+    in_world_M_tool = data.oMf[tool_id]
+    viz.applyConfiguration(boxID, in_world_M_target)
+    viz.applyConfiguration(tipID, in_world_M_tool)
     viz.display(q)
     time.sleep(1e-1)
+# %end_jupyter_snippet visualizer_callback
 
+# --- CASADI MODEL AND HELPERS
 
+# %jupyter_snippet casadi_model
 # --- Casadi helpers
 cmodel = cpin.Model(model)
 cdata = cmodel.createData()
+# %end_jupyter_snippet
 
-cq = casadi.SX.sym("x", model.nq, 1)
+# %jupyter_snippet cq
+cq = casadi.SX.sym("q", model.nq, 1)
+# %end_jupyter_snippet
+
+# %jupyter_snippet casadi_fk
 cpin.framesForwardKinematics(cmodel, cdata, cq)
-pos_tool = casadi.Function("ptool", [cq], [cdata.oMf[idTool].translation])
-error_tool = casadi.Function(
-    "etool", [cq], [cpin.log6(cdata.oMf[idTool].inverse() * cpin.SE3(Mtarget)).vector]
-)
+# %end_jupyter_snippet
 
+# %jupyter_snippet casadi_error
 error_tool = casadi.Function(
-    "etool", [cq], [cpin.log6(cdata.oMf[idTool].inverse() * cpin.SE3(Mtarget)).vector]
+    "etool",
+    [cq],
+    [
+        cpin.log6(
+            cdata.oMf[tool_id].inverse() * cpin.SE3(in_world_M_target)
+        ).vector
+    ],
 )
+# %end_jupyter_snippet
 
-### PROBLEM
+# --- OPTIMIZATION PROBLEM
+
+# %jupyter_snippet casadi_computation_graph
 opti = casadi.Opti()
 var_q = opti.variable(model.nq)
-
-totalcost = casadi.sumsqr(pos_tool(var_q) - Mtarget.translation)
 totalcost = casadi.sumsqr(error_tool(var_q))
+# %end_jupyter_snippet
 
-### SOLVE
+# %jupyter_snippet ipopt
 opti.minimize(totalcost)
-opti.solver("ipopt")  # set numerical backend
+opti.solver("ipopt")  # select the backend solver
 opti.callback(lambda i: displayProblem(opti.debug.value(var_q)))
 
 # Caution: in case the solver does not converge, we are picking the candidate values
@@ -105,3 +125,11 @@ try:
 except:
     print("ERROR in convergence, plotting debug info.")
     sol_q = opti.debug.value(var_q)
+# %end_jupyter_snippet
+
+# %jupyter_snippet check_final_placement
+print(
+    "The robot finally reached effector placement at\n",
+    robot.placement(sol_q, 6),
+)
+# %end_jupyter_snippet
