@@ -14,28 +14,22 @@ The following tools are used:
 
 # %jupyter_snippet imports
 import time
-
 import casadi
 import example_robot_data as robex
 import numpy as np
 import pinocchio as pin
 from pinocchio import casadi as cpin
-
-from utils.meshcat_viewer_wrapper import MeshcatVisualizer
-
+from wan2024.meshcat_viewer_wrapper import MeshcatVisualizer
 # %end_jupyter_snippet
 
-
-# Change numerical print
-pin.SE3.__repr__ = pin.SE3.__str__
-np.set_printoptions(precision=2, linewidth=300, suppress=True, threshold=1e6)
 
 ### HYPER PARAMETERS
 # %jupyter_snippet configurations
-Mtarget = pin.SE3(pin.utils.rotate("y", 3), np.array([-0.5, 0.1, 0.2]))  # x,y,z
+in_world_M_target = pin.SE3(pin.utils.rotate("y", 3), np.array([-0.5, 0.1, 0.2]))  # x,y,z
 q0 = np.array([0, -3.14 / 2, 0, 0, 0, 0])
 endEffectorFrameName = "tool0"
 # %end_jupyter_snippet
+
 # %jupyter_snippet hyper
 T = 10
 w_run = 0.1
@@ -65,29 +59,25 @@ viz.addBox(boxID, [0.05, 0.1, 0.2], [1.0, 0.2, 0.2, 0.5])
 tipID = "world/blue"
 viz.addBox(tipID, [0.08] * 3, [0.2, 0.2, 1.0, 0.5])
 
-
 def displayScene(q, dt=1e-1):
     """
     Given the robot configuration, display:
     - the robot
     - a box representing endEffector_ID
-    - a box representing Mtarget
+    - a box representing in_world_M_target
     """
     pin.framesForwardKinematics(model, data, q)
     M = data.oMf[endEffector_ID]
-    viz.applyConfiguration(boxID, Mtarget)
+    viz.applyConfiguration(boxID, in_world_M_target)
     viz.applyConfiguration(tipID, M)
     viz.display(q)
     time.sleep(dt)
-
-
 # %end_jupyter_snippet
+
 # %jupyter_snippet disptraj
 def displayTraj(qs, dt=1e-2):
     for q in qs[1:]:
         displayScene(q, dt=dt)
-
-
 # %end_jupyter_snippet
 
 # %jupyter_snippet casadi
@@ -99,12 +89,12 @@ cq = casadi.SX.sym("x", model.nq, 1)
 cpin.framesForwardKinematics(cmodel, cdata, cq)
 
 error3_tool = casadi.Function(
-    "etool3", [cq], [cdata.oMf[endEffector_ID].translation - Mtarget.translation]
+    "etool3", [cq], [cdata.oMf[endEffector_ID].translation - in_world_M_target.translation]
 )
 error6_tool = casadi.Function(
     "etool6",
     [cq],
-    [cpin.log6(cdata.oMf[endEffector_ID].inverse() * cpin.SE3(Mtarget)).vector],
+    [cpin.log6(cdata.oMf[endEffector_ID].inverse() * cpin.SE3(in_world_M_target)).vector],
 )
 error_tool = error3_tool
 # %end_jupyter_snippet
@@ -147,4 +137,4 @@ except:
 
 print("***** Display the resulting trajectory ...")
 displayScene(robot.q0, 1)
-displayTraj(sol_qs)
+displayTraj(sol_qs,1e-1)

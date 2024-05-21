@@ -41,16 +41,18 @@ np.set_printoptions(precision=2, linewidth=300, suppress=True, threshold=1e6)
 
 ### HYPER PARAMETERS
 # %jupyter_snippet frames
-Mtarget = pin.SE3(pin.utils.rotate("y", 3), np.array([-0.1, 0.2, 0.45094]))  # x,y,z
+in_world_M_target = pin.SE3(pin.utils.rotate("y", 3), np.array([-0.1, 0.2, 0.45094]))  # x,y,z
 contacts = [SimpleNamespace(name="left_sole_link", type=pin.ContactType.CONTACT_6D)]
 endEffectorFrameName = "right_sole_link"
 # %end_jupyter_snippet
+
 # %jupyter_snippet hyper
 T = 50
 DT = 0.002
 w_vel = 0.1
 w_conf = 5
 # %end_jupyter_snippet
+
 # Baumgart correction
 # %jupyter_snippet Baumgart
 Kp = 200
@@ -94,11 +96,11 @@ def displayScene(q, dt=1e-1):
     Given the robot configuration, display:
     - the robot
     - a box representing endEffector_ID
-    - a box representing Mtarget
+    - a box representing in_world_M_target
     """
     pin.framesForwardKinematics(model, data, q)
     M = data.oMf[endEffector_ID]
-    viz.applyConfiguration(boxID, Mtarget)
+    viz.applyConfiguration(boxID, in_world_M_target)
     viz.applyConfiguration(tipID, M)
     for c in contacts:
         viz.applyConfiguration(c.viz, data.oMf[c.id])
@@ -165,7 +167,7 @@ cnext = casadi.Function(
 # %jupyter_snippet error
 # Sym graph for the operational error
 error_tool = casadi.Function(
-    "etool3", [cx], [cdata.oMf[endEffector_ID].translation - Mtarget.translation]
+    "etool3", [cx], [cdata.oMf[endEffector_ID].translation - in_world_M_target.translation]
 )
 # %end_jupyter_snippet
 

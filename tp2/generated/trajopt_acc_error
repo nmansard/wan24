@@ -1,0 +1,4 @@
+# Sym graph for the operational error
+error_tool = casadi.Function(
+    "etool3", [cx], [cdata.oMf[endEffector_ID].translation - in_world_M_target.translation]
+)
