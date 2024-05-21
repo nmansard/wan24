@@ -44,11 +44,11 @@ This can be done using two virtual environments.
 
 1. create an environment:
 
-    `python -m venv .venv/pincasadi`
+    `python -m venv .venv-pincasadi`
 
 2. activate it:
 
-    `source .venv/pincasadi/bin/activate`
+    `source .venv-pincasadi/bin/activate`
 
 3. update pip:
 
@@ -67,11 +67,11 @@ This can be done using two virtual environments.
 
 1. create an environment:
 
-    `python -m venv .venv/crocoddyl`
+    `python -m venv .venv-croc`
 
 2. activate it:
 
-    `source .venv/crocoddyl/bin/activate`
+    `source .venv-croc/bin/activate`
 
 3. update pip:
 
