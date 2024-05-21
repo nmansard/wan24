@@ -60,7 +60,7 @@ viz.addBox(boxID, [0.05, 0.1, 0.2], [1.0, 0.2, 0.2, 0.5])
 tipID = "world/blue"
 viz.addBox(tipID, [0.08] * 3, [0.2, 0.2, 1.0, 0.5])
 
-def displayProblem(q):
+def displayScene(q):
     """
     Given the robot configuration, display:
     - the robot
@@ -114,7 +114,7 @@ totalcost = casadi.sumsqr(error_tool(var_q))
 # %jupyter_snippet ipopt
 opti.minimize(totalcost)
 opti.solver("ipopt")  # select the backend solver
-opti.callback(lambda i: displayProblem(opti.debug.value(var_q)))
+opti.callback(lambda i: displayScene(opti.debug.value(var_q)))
 # %end_jupyter_snippet
 
 # %jupyter_snippet solve
