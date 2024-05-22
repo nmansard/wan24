@@ -27,7 +27,7 @@ from wan2024.meshcat_viewer_wrapper import MeshcatVisualizer
 # %jupyter_snippet configurations
 in_world_M_target = pin.SE3(pin.utils.rotate("y", 3), np.array([-0.5, 0.1, 0.2]))  # x,y,z
 q0 = np.array([0, -3.14 / 2, 0, 0, 0, 0])
-endEffectorFrameName = "tool0"
+tool_frameName = "tool0"
 # %end_jupyter_snippet
 
 # %jupyter_snippet hyper
@@ -44,7 +44,7 @@ robot.q0 = q0
 # The pinocchio model is what we are really interested by.
 model = robot.model
 data = model.createData()
-endEffector_ID = model.getFrameId(endEffectorFrameName)
+tool_id = model.getFrameId(tool_frameName)
 # %end_jupyter_snippet
 
 # --- Add box to represent target
@@ -63,11 +63,11 @@ def displayScene(q, dt=1e-1):
     """
     Given the robot configuration, display:
     - the robot
-    - a box representing endEffector_ID
+    - a box representing tool_id
     - a box representing in_world_M_target
     """
     pin.framesForwardKinematics(model, data, q)
-    M = data.oMf[endEffector_ID]
+    M = data.oMf[tool_id]
     viz.applyConfiguration(boxID, in_world_M_target)
     viz.applyConfiguration(tipID, M)
     viz.display(q)
@@ -89,12 +89,12 @@ cq = casadi.SX.sym("x", model.nq, 1)
 cpin.framesForwardKinematics(cmodel, cdata, cq)
 
 error3_tool = casadi.Function(
-    "etool3", [cq], [cdata.oMf[endEffector_ID].translation - in_world_M_target.translation]
+    "etool3", [cq], [cdata.oMf[tool_id].translation - in_world_M_target.translation]
 )
 error6_tool = casadi.Function(
     "etool6",
     [cq],
-    [cpin.log6(cdata.oMf[endEffector_ID].inverse() * cpin.SE3(in_world_M_target)).vector],
+    [cpin.log6(cdata.oMf[tool_id].inverse() * cpin.SE3(in_world_M_target)).vector],
 )
 error_tool = error3_tool
 # %end_jupyter_snippet
