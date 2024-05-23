@@ -1,0 +1,5 @@
+# ### Load robot
+robot = robex.load("talos")
+robot_model = robot.model
+# The robot data will be used at config time to define some values of the OCP
+robot_data = robot_model.createData()

@@ -1,0 +1,25 @@
+# ### Contact model
+# Create two contact models used along the motion
+supportContactModelLeft = crocoddyl.ContactModel6D(
+    state,
+    leftFoot_id,
+    pinocchio.SE3.Identity(),
+    pinocchio.LOCAL,
+    actuation.nu,
+    np.array([0, 40]),
+)
+supportContactModelRight = crocoddyl.ContactModel6D(
+    state,
+    rightFoot_id,
+    pinocchio.SE3.Identity(),
+    pinocchio.LOCAL,
+    actuation.nu,
+    np.array([0, 40]),
+)
+
+contactModel1Foot = crocoddyl.ContactModelMultiple(state, actuation.nu)
+contactModel1Foot.addContact(rightFoot_frameName + "_contact", supportContactModelRight)
+
+contactModel2Feet = crocoddyl.ContactModelMultiple(state, actuation.nu)
+contactModel2Feet.addContact(leftFoot_frameName + "_contact", supportContactModelLeft)
+contactModel2Feet.addContact(rightFoot_frameName + "_contact", supportContactModelRight)

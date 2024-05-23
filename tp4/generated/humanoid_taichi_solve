@@ -1,0 +1,4 @@
+# ### Warm start from quasistatic solutions
+xs = [x0] * (solver.problem.T + 1)
+us = solver.problem.quasiStatic([x0] * solver.problem.T)
+solver.solve(xs, us, 500, False, 1e-9)

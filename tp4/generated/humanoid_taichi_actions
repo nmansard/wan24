@@ -1,0 +1,43 @@
+# Create cost model per each action model. We divide the motion in 3 phases plus its
+# terminal model.
+
+# Phase 1: two feet in contact, hand reach the target
+runningCostModel1 = crocoddyl.CostModelSum(state, actuation.nu)
+runningCostModel1.addCost("gripperPose", handTrackingCost, 1e2)
+runningCostModel1.addCost("stateReg", xRegCost, 1e-3)
+runningCostModel1.addCost("ctrlReg", uRegCost, 1e-4)
+dmodelRunning1 = crocoddyl.DifferentialActionModelContactFwdDynamics(
+    state, actuation, contactModel2Feet, runningCostModel1
+)
+runningModel1 = crocoddyl.IntegratedActionModelEuler(dmodelRunning1, DT)
+
+# Phase 2: only right foot in contact, hand stays on target, left foot to target 1
+runningCostModel2 = crocoddyl.CostModelSum(state, actuation.nu)
+runningCostModel2.addCost("gripperPose", handTrackingCost, 1e2)
+runningCostModel2.addCost("footPose", footTrackingCost1, 1e1)
+runningCostModel2.addCost("stateReg", xRegCost, 1e-3)
+runningCostModel2.addCost("ctrlReg", uRegCost, 1e-4)
+dmodelRunning2 = crocoddyl.DifferentialActionModelContactFwdDynamics(
+    state, actuation, contactModel1Foot, runningCostModel2
+)
+runningModel2 = crocoddyl.IntegratedActionModelEuler(dmodelRunning2, DT)
+
+# Phase 3: only right foot in contact, hand stays on target, left foot to target 2
+runningCostModel3 = crocoddyl.CostModelSum(state, actuation.nu)
+runningCostModel3.addCost("gripperPose", handTrackingCost, 1e2)
+runningCostModel3.addCost("footPose", footTrackingCost2, 1e1)
+runningCostModel3.addCost("stateReg", xRegCost, 1e-3)
+runningCostModel3.addCost("ctrlReg", uRegCost, 1e-4)
+dmodelRunning3 = crocoddyl.DifferentialActionModelContactFwdDynamics(
+    state, actuation, contactModel1Foot, runningCostModel3
+)
+runningModel3 = crocoddyl.IntegratedActionModelEuler(dmodelRunning3, DT)
+
+# Terminal cost: nothing specific
+terminalCostModel = crocoddyl.CostModelSum(state, actuation.nu)
+terminalCostModel.addCost("gripperPose", handTrackingCost, 1e2)
+terminalCostModel.addCost("stateReg", xRegTermCost, 1e-3)
+dmodelTerminal = crocoddyl.DifferentialActionModelContactFwdDynamics(
+    state, actuation, contactModel1Foot, terminalCostModel
+)
+terminalModel = crocoddyl.IntegratedActionModelEuler(dmodelTerminal, 0)

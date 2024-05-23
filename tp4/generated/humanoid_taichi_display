@@ -1,0 +1,1 @@
+viz.play([x[:robot.model.nq] for x in solver.xs],DT)

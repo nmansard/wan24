@@ -1,0 +1,2 @@
+state = crocoddyl.StateMultibody(robot_model)
+actuation = crocoddyl.ActuationModelFloatingBase(state)

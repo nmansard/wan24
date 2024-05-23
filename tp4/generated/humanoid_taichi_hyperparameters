@@ -1,0 +1,29 @@
+# ### Hyperparameters
+
+# Set integration time
+DT = 5e-2
+T = 40
+
+# Initialize reference state, target and reference CoM
+
+hand_frameName = "gripper_left_joint"
+rightFoot_frameName = "right_sole_link"
+leftFoot_frameName = "left_sole_link"
+
+# Main frame Ids
+hand_id = robot_model.getFrameId(hand_frameName)
+rightFoot_id = robot_model.getFrameId(rightFoot_frameName)
+leftFoot_id = robot_model.getFrameId(leftFoot_frameName)
+
+# Init state
+q0 = robot_model.referenceConfigurations["half_sitting"]
+x0 = np.concatenate([q0, np.zeros(robot_model.nv)])
+
+# Reference quantities
+pinocchio.framesForwardKinematics(robot_model, robot_data, q0)
+comRef = (robot_data.oMf[rightFoot_id].translation + robot_data.oMf[leftFoot_id].translation) / 2
+comRef[2] = pinocchio.centerOfMass(robot_model, robot_data, q0)[2].item()
+
+in_world_M_foot_target_1 = pinocchio.SE3(np.eye(3), np.array([0.0, 0.4, 0.0]))
+in_world_M_foot_target_2 =  pinocchio.SE3(np.eye(3), np.array([0.3, 0.15, 0.35]))
+in_world_M_hand_target = pinocchio.SE3(np.eye(3), np.array([0.4, 0, 1.2]))

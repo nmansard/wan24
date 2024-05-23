@@ -1,0 +1,13 @@
+problem = crocoddyl.ShootingProblem(
+    x0, [runningModel1] * T + [runningModel2] * T + [runningModel3] * T, terminalModel
+)
+
+# Creating the DDP solver for this OC problem, defining a logger
+solver = crocoddyl.SolverFDDP(problem)
+solver.th_stop = 1e-7
+solver.setCallbacks(
+    [
+        crocoddyl.CallbackVerbose(),
+        crocoddyl.CallbackLogger(),
+    ]
+)
