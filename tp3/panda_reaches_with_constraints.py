@@ -38,7 +38,7 @@ X_WALL_UPPER = .35
 # %end_jupyter_snippet
 
 # Configure viewer to vizualize the robot and a green box to feature the goal placement.
-from supaero2024.meshcat_viewer_wrapper import MeshcatVisualizer
+from wan2024.meshcat_viewer_wrapper import MeshcatVisualizer
 viz = MeshcatVisualizer(robot)
 viz.display(robot.q0)
 viz.addBox('world/goal',[.1,.1,.1],[0,1,0,1])
