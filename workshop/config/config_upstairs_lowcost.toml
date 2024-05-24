@@ -23,15 +23,15 @@ gains = [0.0, 0.0]
 
 # Impact costs
 [impact.swingfoot]
-weight = 1e3
+weight = 0
 
 # Tracking costs
 [tracking.supportfoot]
 weight = 0
 
 [tracking.swingfoot]
-min_weight = 10
-max_weight = 100
+min_weight = 1
+max_weight = 1
 ratio = [1.0, 1.0, 1.0, 0.1, 0.01, 1.0]
 
 # [tracking.swingfoot.flyhigh]
@@ -43,16 +43,16 @@ ratio = [1.0, 1.0, 1.0, 0.1, 0.01, 1.0]
 verticalvelocity = 0.0
 
 [regularization.freeflyer]
-orientation = 0.1
+orientation = 0
 
 [regularization.state]
-position = 1e-2
+position = 1e-6
 
 [regularization.joint]
-position = 1e-2
-velocity = 1e-2
-acceleration = 1e-1
-torque = 1e-2
+position = 1
+velocity = 1
+acceleration = 1e-5
+torque = 0
 
 # Final state
 [final.joint]
