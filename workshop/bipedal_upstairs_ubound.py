@@ -96,7 +96,6 @@ else:
     # lims *= 0.5  # reduced artificially the torque limits
     talos_legs.model.lowerPositionLimit[-2:] /= 2
     talos_legs.model.lowerPositionLimit[-2-6:-2] /= 2
-    lims = talos_legs.model.effortLimit
     talos_legs.model.effortLimit = lims
     robot = talos_legs
     q0 = robot.model.referenceConfigurations["half_sitting"].copy()
@@ -108,32 +107,20 @@ v0 = pnc.utils.zero(robot.model.nv)
 x0 = np.concatenate([q0, v0])
 
 # Setting up the 3d walking problem
-if VERSION:
-    options = toml.load(f"config/config_upstairs_{str(VERSION)}.toml")
-    gait = Upstairs(
-        robot.model,
-        q0,
-        FLYING_SIDE,
-        rightFoot,
-        leftFoot,
-        options=options,
-        leftToe=leftToe,
-        rightToe=rightToe,
-        integrator="euler",
-        control="zero",
-        no_impulse=NO_IMPULSE,
-    )
-else:
-    gait = UpstairsV1(
-        robot.model,
-        q0,
-        rightFoot,
-        leftFoot,
-        leftToe=leftToe,
-        rightToe=rightToe,
-        integrator="euler",
-        control="zero",
-    )
+options = toml.load(f"config/config_upstairs_{str(VERSION)}.toml")
+gait = Upstairs(
+    robot.model,
+    q0,
+    FLYING_SIDE,
+    rightFoot,
+    leftFoot,
+    options=options,
+    leftToe=leftToe,
+    rightToe=rightToe,
+    integrator="euler",
+    control="zero",
+    no_impulse=NO_IMPULSE,
+)
 
 # Setting up all tasks
 PARAMS = {
@@ -147,19 +134,6 @@ PARAMS = {
     "supportKnots": 25,
 }
 cameraTF = [3.0, 3.68, 0.84, 0.2, 0.62, 0.72, 0.22]
-
-display = None
-if WITHDISPLAY:
-    if display is None:
-        try:
-            import gepetto
-
-            gepetto.corbaserver.Client()
-            display = crocoddyl.GepettoDisplay(
-                robot, 4, 4, cameraTF, frameNames=[rightFoot, leftFoot]
-            )
-        except Exception:
-            display = crocoddyl.MeshcatDisplay(robot, frameNames=[rightFoot, leftFoot])
 
 
 # Creating a walking problem
@@ -196,18 +170,7 @@ with open(reprFilename, "w") as f:
 
 # Added the callback functions
 print("*** SOLVE UPSTAIRS ***")
-if WITHDISPLAY and type(display) == crocoddyl.GepettoDisplay:
-    if WITHPLOT:
-        solver.setCallbacks(
-            [
-                crocoddyl.CallbackVerbose(),
-                crocoddyl.CallbackLogger(),
-                crocoddyl.CallbackDisplay(display),
-            ]
-        )
-    else:
-        solver.setCallbacks([crocoddyl.CallbackVerbose(), crocoddyl.CallbackDisplay(display)])
-elif WITHPLOT:
+if WITHPLOT:
     solver.setCallbacks(
         [
             crocoddyl.CallbackVerbose(),
@@ -240,6 +203,16 @@ if GEN_GUESS:
     with open(initial_guess_path, "wb") as outp:
         pickle.dump({"xs": solver.xs, "us": solver.us}, outp, pickle.HIGHEST_PROTOCOL)
 
+# Display the entire motion
+if WITHDISPLAY:
+    display = crocoddyl.MeshcatDisplay(robot, frameNames=[rightFoot, leftFoot])
+    display.rate = -1
+    display.freq = 1
+    def launch_display(display, solver):
+        while True:
+            display.displayFromSolver(solver)
+    from threading import Thread
+    Thread(target=launch_display, args=(display, solver)).start()
 
 # Plotting the entire motion
 if WITHPLOT:
@@ -291,11 +264,3 @@ if CONVERT:
     scenario = build_scenario(graph, trajectories)
 
     scenario.to_json_file(f"upstairs_{FLYING_SIDE}_crocoddyl" + scenario.canonical_filename())
-
-
-# Display the entire motion
-if WITHDISPLAY:
-    display.rate = -1
-    display.freq = 1
-    while True:
-        display.displayFromSolver(solver)
