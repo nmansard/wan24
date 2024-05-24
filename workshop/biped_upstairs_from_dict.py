@@ -659,10 +659,18 @@ class SimpleBipedGaitProblem:
 
         bounds = crocoddyl.ActivationBounds(xlb, xub, self.constraint_opts["joint"]["limit"]["r"])
         xLimitResidual = crocoddyl.ResidualModelState(self.state, nu)
-        xLimitActivation = crocoddyl.ActivationModelQuadraticBarrier(bounds)
-        limitCost = crocoddyl.CostModelResidual(self.state, xLimitActivation, xLimitResidual)
-        if not np.isclose(self.constraint_opts["joint"]["limit"]["weight"], 0):
-            costModel.addCost("xLimitCost", limitCost, self.constraint_opts["joint"]["limit"]["weight"])
+        #  xLimitActivation = crocoddyl.ActivationModelQuadraticBarrier(bounds)
+        #  limitCost = crocoddyl.CostModelResidual(self.state, xLimitActivation, xLimitResidual)
+        #  if not np.isclose(self.constraint_opts["joint"]["limit"]["weight"], 0):
+            #  costModel.addCost("xLimitCost", limitCost, self.constraint_opts["joint"]["limit"]["weight"])
+        #  costModel.addCost("xLimitCost", limitCost, self.constraint_opts["joint"]["limit"]["weight"])
+
+        # Hard constraints have to impact
+        #  xLimitResidual = crocoddyl.ResidualModelState(self.state, np.zeros(self.state.nx), nu)
+        #  residualConstraint = crocoddyl.ConstraintModelResidual(self.state, xLimitResidual,self.state.lb, self.state.ub)
+        residualConstraint = crocoddyl.ConstraintModelResidual(self.state, xLimitResidual, xlb, xub)
+        constraintManager = crocoddyl.ConstraintModelManager(self.state, nu)
+        constraintManager.addConstraint("xLimitConstraint", residualConstraint)
 
         if impulseModel is None:
             # Ctrl limits
@@ -676,16 +684,12 @@ class SimpleBipedGaitProblem:
             if not np.isclose(self.constraint_opts["torque"]["limit"]["weight"], 0):
                 costModel.addCost("ctrlLimitCost", limitCost, self.constraint_opts["torque"]["limit"]["weight"])
 
-        # Hard constraints have to impact
-        # constraintManager = crocoddyl.ConstraintModelManager(self.state, nu)
-        # residualConstraint = crocoddyl.ConstraintModelResidual(self.state, xLimitResidual)
-        # constraintManager.addConstraint("xLimitConstraint", residualConstraint)
-
         if impulseModel is not None:
             model = crocoddyl.ActionModelImpulseFwdDynamics(
                 self.state,
                 impulseModel,
                 costModel,  # constraintManager
+                constraintManager,
                 0.0,
                 0.0,
                 True
@@ -698,7 +702,7 @@ class SimpleBipedGaitProblem:
                     self.actuation,
                     contactModel,
                     costModel,
-                    # constraintManager,
+                    constraintManager,
                     0.0,
                     True,
                 )
@@ -708,6 +712,7 @@ class SimpleBipedGaitProblem:
                     self.actuation,
                     contactModel,
                     costModel,  # constraintManager
+                    constraintManager,
                 )
             # Use integration scheme to convert differential (continuous) to discrete dynamics (the simpler the faster)
             if self._control == "one":
