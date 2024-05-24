@@ -90,7 +90,10 @@ if EVE:
 else:
     talos_legs = example_robot_data.load("talos_legs")
     lims = talos_legs.model.effortLimit
-    lims *= 0.5  # reduced artificially the torque limits
+    # lims *= 0.5  # reduced artificially the torque limits
+    talos_legs.model.lowerPositionLimit[-2:] /= 2
+    talos_legs.model.lowerPositionLimit[-2-6:-2] /= 2
+    lims = talos_legs.model.effortLimit
     talos_legs.model.effortLimit = lims
     robot = talos_legs
     q0 = robot.model.referenceConfigurations["half_sitting"].copy()
