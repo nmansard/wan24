@@ -502,6 +502,7 @@ class SimpleBipedGaitProblem:
         costs.addCost("comTrack", comTrack, 1e3)
 
     def _add_foot_tracking_cost(self, i, footTarget, weight, costs, weightRatio=np.ones(6)):
+        if np.isclose(weight, 0.0): return
         framePlacementResidual = crocoddyl.ResidualModelFramePlacement(
             self.state, i, pinocchio.XYZQUATToSE3(footTarget), costs.nu
         )
@@ -510,6 +511,7 @@ class SimpleBipedGaitProblem:
         costs.addCost(self.rmodel.frames[i].name + "_footTrack", footTrack, weight)
 
     def _add_foot_damping_cost(self, i, weight, costs):
+        if np.isclose(weight, 0.0): return
         frameVelocityResidual = crocoddyl.ResidualModelFrameVelocity(
             self.state,
             i,
@@ -525,6 +527,7 @@ class SimpleBipedGaitProblem:
         )
 
     def _add_fly_high_cost(self, i, costs):
+        if np.isclose(self.tracking_opts["swingfoot"]["flyhigh"]["weight"], 0.0): return
         flyHighResidual = crocoddyl.ResidualModelFlyHigh(
             self.state, i, self.tracking_opts["swingfoot"]["flyhigh"]["slope"], costs.nu
         )
@@ -537,6 +540,7 @@ class SimpleBipedGaitProblem:
         )
 
     def _add_vert_velocity_cost(self, i, weight, costs):
+        if np.isclose(weight, 0.0): return
         vertical_velocity_reg_residual = crocoddyl.ResidualModelFrameVelocity(
             self.state,
             i,
@@ -554,6 +558,7 @@ class SimpleBipedGaitProblem:
         costs.addCost(self.rmodel.frames[i].name + "_vel_zReg", vertical_velocity_reg_cost, weight)
 
     def _add_constraint_limit(self, id, params, costs):
+        if np.isclose(self.constraint_opts["frametranslation"]["weight"], 0.0): return
         toePlacementResidual = crocoddyl.ResidualModelFrameTranslation(
             self.state, id, np.zeros(3), costs.nu
         )
@@ -567,6 +572,7 @@ class SimpleBipedGaitProblem:
         )
 
     def _add_wrench_cone_limit(self, i, costs):
+        if np.isclose(self.constraint_opts["wrenchcone"]["weight"], 0.0): return
         cone = crocoddyl.WrenchCone(self.Rsurf, self.mu, np.array([0.1, 0.05]))
         wrenchResidual = crocoddyl.ResidualModelContactWrenchCone(
             self.state, i, cone, costs.nu, self._fwddyn
@@ -654,7 +660,8 @@ class SimpleBipedGaitProblem:
         xLimitResidual = crocoddyl.ResidualModelState(self.state, nu)
         xLimitActivation = crocoddyl.ActivationModelQuadraticBarrier(bounds)
         limitCost = crocoddyl.CostModelResidual(self.state, xLimitActivation, xLimitResidual)
-        costModel.addCost("xLimitCost", limitCost, self.constraint_opts["joint"]["limit"]["weight"])
+        if not np.isclose(self.constraint_opts["joint"]["limit"]["weight"], 0):
+            costModel.addCost("xLimitCost", limitCost, self.constraint_opts["joint"]["limit"]["weight"])
 
         if impulseModel is None:
             # Ctrl limits
@@ -665,7 +672,8 @@ class SimpleBipedGaitProblem:
             xLimitResidual = crocoddyl.ResidualModelControl(self.state, nu)
             xLimitActivation = crocoddyl.ActivationModelQuadraticBarrier(bounds)
             limitCost = crocoddyl.CostModelResidual(self.state, xLimitActivation, xLimitResidual)
-            costModel.addCost("ctrlLimitCost", limitCost, self.constraint_opts["torque"]["limit"]["weight"])
+            if not np.isclose(self.constraint_opts["torque"]["limit"]["weight"], 0):
+                costModel.addCost("ctrlLimitCost", limitCost, self.constraint_opts["torque"]["limit"]["weight"])
 
         # Hard constraints have to impact
         # constraintManager = crocoddyl.ConstraintModelManager(self.state, nu)
