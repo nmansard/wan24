@@ -173,6 +173,13 @@ problem, feetTargets, comTargets = gait.createUpstairsProblem(
 solver = crocoddyl.SolverBoxFDDP(problem)
 # solver.th_stop = 1e-7
 
+from repr_ocp import reprProblem
+reprFilename =  f"/tmp/bipedal_upstars-{VERSION}-repr.ascii"
+with open(reprFilename, "w") as f:
+    f.write(reprProblem(solver.problem))
+    print(f"OCP described in {reprFilename}")
+
+
 # Added the callback functions
 print("*** SOLVE UPSTAIRS ***")
 if WITHDISPLAY and type(display) == crocoddyl.GepettoDisplay:
