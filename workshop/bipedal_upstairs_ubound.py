@@ -148,18 +148,19 @@ problem, feetTargets, comTargets = gait.createUpstairsProblem(
     PARAMS["stepKnots"],
     PARAMS["supportKnots"],
 )
-# solver = crocoddyl.SolverIpopt(
-# solver = crocoddyl.SolverKKT(
-# solver = crocoddyl.SolverBoxFDDP(problem)
-# solver.th_stop = 1e-9
+print(f'Using hard constraints: {options["constraint"]["hard"]["use"]}')
+if not options["constraint"]["hard"]["use"]:
+    solver = crocoddyl.SolverBoxFDDP(problem)
+    solver.th_stop = 1e-9
 
-solver = mim_solvers.SolverCSQP(problem)
-solver.termination_tolerance = 1e-2         # Termination criteria (KKT residual)
-solver.max_qp_iters = 1000                  # Maximum number of QP iteration
-solver.eps_abs = 1e-5                       # QP termination absolute criteria, 1e-9
-solver.eps_rel = 0.                         # QP termination absolute criteria
-solver.use_filter_line_search = True        # True by default, False = use merit function
-solver.with_callbacks = True
+else:
+    solver = mim_solvers.SolverCSQP(problem)
+    solver.termination_tolerance = 1e-2         # Termination criteria (KKT residual)
+    solver.max_qp_iters = 1000                  # Maximum number of QP iteration
+    solver.eps_abs = 1e-5                       # QP termination absolute criteria, 1e-9
+    solver.eps_rel = 0.                         # QP termination absolute criteria
+    solver.use_filter_line_search = True        # True by default, False = use merit function
+    solver.with_callbacks = True
 
 from repr_ocp import reprProblem
 reprFilename =  f"/tmp/bipedal_upstars-{VERSION}-repr.ascii"
