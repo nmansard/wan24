@@ -79,7 +79,7 @@ This can be done using two virtual environments.
 
 4. install dependencies:
 
-    `pip install mim-solvers jupyterlab meshcat ipywidgets matplotlib gepetuto`
+    `pip install cmeel-mim-solvers jupyterlab meshcat ipywidgets matplotlib gepetuto`
 
 5. when done with the virtual environment, deactivate:
 
