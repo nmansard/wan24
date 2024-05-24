@@ -15,10 +15,8 @@ from biped_upstairs_from_dict import SimpleBipedGaitProblem as Upstairs
 import crocoddyl
 import mim_solvers
 
-#  WITHDISPLAY = "display" in sys.argv or "CROCODDYL_DISPLAY" in os.environ
-#  WITHPLOT = "plot" in sys.argv or "CROCODDYL_PLOT" in os.environ
-WITHDISPLAY = True
-WITHPLOT = True
+WITHDISPLAY = "display" in sys.argv or "CROCODDYL_DISPLAY" in os.environ
+WITHPLOT = "plot" in sys.argv or "CROCODDYL_PLOT" in os.environ
 CONVERT = "conv" in sys.argv or "CROCODDYL_CONV" in os.environ
 GEN_GUESS = "gen_guess" in sys.argv
 NO_IMPULSE = "no_impulse" in sys.argv
@@ -207,6 +205,17 @@ if GEN_GUESS:
     with open(initial_guess_path, "wb") as outp:
         pickle.dump({"xs": solver.xs, "us": solver.us}, outp, pickle.HIGHEST_PROTOCOL)
 
+# Display the entire motion
+if WITHDISPLAY:
+    display = crocoddyl.MeshcatDisplay(robot, frameNames=[rightFoot, leftFoot])
+    display.rate = -1
+    display.freq = 1
+    def launch_display(display, solver):
+        while True:
+            display.displayFromSolver(solver)
+    from threading import Thread
+    Thread(target=launch_display, args=(display, solver)).start()
+
 # Plotting the entire motion
 if WITHPLOT:
     log = solver.getCallbacks()[1]
@@ -245,21 +254,3 @@ if CONVERT:
     scenario = build_scenario(graph, trajectories)
 
     scenario.to_json_file(f"upstairs_{FLYING_SIDE}_crocoddyl" + scenario.canonical_filename())
-
-# Display the entire motion
-display = None
-if WITHDISPLAY:
-    if display is None:
-        try:
-            import gepetto
-
-            gepetto.corbaserver.Client()
-            display = crocoddyl.GepettoDisplay(
-                robot, 4, 4, cameraTF, frameNames=[rightFoot, leftFoot]
-            )
-        except Exception:
-            display = crocoddyl.MeshcatDisplay(robot, frameNames=[rightFoot, leftFoot])
-    display.rate = -1
-    display.freq = 1
-    while True:
-        display.displayFromSolver(solver)
