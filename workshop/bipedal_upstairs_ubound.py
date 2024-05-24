@@ -26,8 +26,8 @@ elif "V3" in sys.argv:
     VERSION = "V3"
 elif "V4" in sys.argv:
     VERSION = "V4"
-elif "V5" in sys.argv:
-    VERSION = "V5"
+elif "lowcost" in sys.argv:
+    VERSION = "lowcost"
 else:
     VERSION = False
 FLYING_SIDE = "right" if "right" in sys.argv else "left"
@@ -107,7 +107,7 @@ x0 = np.concatenate([q0, v0])
 
 # Setting up the 3d walking problem
 if VERSION:
-    options = toml.load(f"config_upstairs_{str(VERSION)}.toml")
+    options = toml.load(f"config/config_upstairs_{str(VERSION)}.toml")
     gait = Upstairs(
         robot.model,
         q0,
