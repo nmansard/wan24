@@ -9,7 +9,7 @@ import numpy as np
 import pinocchio as pnc
 import toml
 # from biped_convert import build_graph_from_trajectories, build_scenario, get_trajectories_list
-# from biped_plot import plotSolution
+from biped_plot import plotSolution
 from biped_upstairs_from_dict import SimpleBipedGaitProblem as Upstairs
 
 import crocoddyl
@@ -241,19 +241,19 @@ if WITHPLOT:
         show=True,
     )
 
-    # plotSolution(
-    #     solver,
-    #     bounds=True,
-    #     show=True,
-    #     leftFoot=leftFoot,
-    #     rightFoot=rightFoot,
-    #     comTargets=comTargets,
-    #     frameTargets=feetTargets,
-    #     frames=[leftToe, rightToe, leftHeel, rightHeel] if EVE else [leftFoot, rightFoot],
-    #     clearanceFrames={"left": [leftHeel, leftToe], "right": [rightHeel, rightToe]} if EVE else None,
-    #     leftFootPolygon=leftFootPolygon if EVE else None,
-    #     rightFootPolygon=rightFootPolygon if EVE else None,
-    # )
+    plotSolution(
+        solver,
+        bounds=True,
+        show=True,
+        leftFoot=leftFoot,
+        rightFoot=rightFoot,
+        comTargets=comTargets,
+        frameTargets=feetTargets,
+        frames=[leftToe, rightToe, leftHeel, rightHeel] if EVE else [leftFoot, rightFoot],
+        clearanceFrames={"left": [leftHeel, leftToe], "right": [rightHeel, rightToe]} if EVE else None,
+        leftFootPolygon=leftFootPolygon if EVE else None,
+        rightFootPolygon=rightFootPolygon if EVE else None,
+    )
 
 if CONVERT:
     step = lambda prefix, toe_push : [f"{prefix}_dbsp", f"{prefix}_dbsp_toe_push", f"{prefix}_sgsp"] if toe_push else [f"{prefix}_dbsp", f"{prefix}_sgsp"]

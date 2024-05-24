@@ -203,7 +203,7 @@ class SimpleBipedGaitProblem:
             )
             # # Updating the current foot position for next step
             # for id in feetPos.keys():
-            #     feetPos[id] = xyzrpy_to_se3(step_feet[id][-1])
+            #     feetPos[id] = pinocchio.XYZQUATToSE3(step_feet[id][-1])
 
             # Append double support and step models
             loco3dModel += doubleSupport + step_model
@@ -426,13 +426,13 @@ class SimpleBipedGaitProblem:
             nu = self.state.nv + 6 * len(supportFootTask.keys())
         contactModel = crocoddyl.ContactModelMultiple(self.state, nu)
         for i, p in supportFootTask.items():
-            feetTarget[i] = p
+            feetTarget[i] = pinocchio.SE3ToXYZQUAT(p).copy()
             self._add_contact(i, feetTarget[i], contactModel)
 
         # Creating the cost model for a contact phase
         costModel = crocoddyl.CostModelSum(self.state, nu)
         for i, p in supportFootTask.items():
-            feetTarget[i] = p
+            feetTarget[i] = pinocchio.SE3ToXYZQUAT(p)
 
             # Place the feet
             self._add_foot_tracking_cost(
@@ -446,7 +446,7 @@ class SimpleBipedGaitProblem:
             # self._add_cop_box_limit(i, p.rotation, cop_x_offset, costModel)
 
         for i, params in swingFootTask.items():
-            feetTarget[i] = params["p"]
+            feetTarget[i] = pinocchio.SE3ToXYZQUAT(params["p"])
 
             # Move the feet
             self._add_foot_tracking_cost(
@@ -489,7 +489,7 @@ class SimpleBipedGaitProblem:
         supportContactModel = crocoddyl.ContactModel6D(
             self.state,
             i,
-            target,
+            pinocchio.XYZQUATToSE3(target),
             pinocchio.LOCAL_WORLD_ALIGNED,
             contactModel.nu,
             np.array(self.options["contact"]["baumgarte"]["gains"]),
@@ -503,7 +503,7 @@ class SimpleBipedGaitProblem:
 
     def _add_foot_tracking_cost(self, i, footTarget, weight, costs, weightRatio=np.ones(6)):
         framePlacementResidual = crocoddyl.ResidualModelFramePlacement(
-            self.state, i, footTarget, costs.nu
+            self.state, i, pinocchio.XYZQUATToSE3(footTarget), costs.nu
         )
         activation = crocoddyl.ActivationModelWeightedQuad(np.array(weightRatio))
         footTrack = crocoddyl.CostModelResidual(self.state, activation, framePlacementResidual)
@@ -524,17 +524,17 @@ class SimpleBipedGaitProblem:
             weight,
         )
 
-    # def _add_fly_high_cost(self, i, costs):
-    #     flyHighResidual = crocoddyl.ResidualModelFlyHigh(
-    #         self.state, i, self.tracking_opts["swingfoot"]["flyhigh"]["slope"], costs.nu
-    #     )
-    #     activation = crocoddyl.ActivationModelQuad(2)
-    #     footFlyHigh = crocoddyl.CostModelResidual(self.state, activation, flyHighResidual)
-    #     costs.addCost(
-    #         self.rmodel.frames[i].name + "_footFlyHigh",
-    #         footFlyHigh,
-    #         self.tracking_opts["swingfoot"]["flyhigh"]["weight"],
-    #     )
+    def _add_fly_high_cost(self, i, costs):
+        flyHighResidual = crocoddyl.ResidualModelFlyHigh(
+            self.state, i, self.tracking_opts["swingfoot"]["flyhigh"]["slope"], costs.nu
+        )
+        activation = crocoddyl.ActivationModelQuad(2)
+        footFlyHigh = crocoddyl.CostModelResidual(self.state, activation, flyHighResidual)
+        costs.addCost(
+            self.rmodel.frames[i].name + "_footFlyHigh",
+            footFlyHigh,
+            self.tracking_opts["swingfoot"]["flyhigh"]["weight"],
+        )
 
     def _add_vert_velocity_cost(self, i, weight, costs):
         vertical_velocity_reg_residual = crocoddyl.ResidualModelFrameVelocity(
@@ -758,7 +758,7 @@ class SimpleBipedGaitProblem:
             nu = self.state.nv + 6 * len(supportFootTask)
         contactModel = crocoddyl.ContactModelMultiple(self.state, nu)
         for i, p in supportFootTask.items():
-            feetTarget[i] = p
+            feetTarget[i] = pinocchio.SE3ToXYZQUAT(p).copy()
             self._add_contact(i, feetTarget[i], contactModel)
 
         # Get costs
@@ -808,7 +808,7 @@ class SimpleBipedGaitProblem:
         # Creating the cost model for a contact phase
         costModel = crocoddyl.CostModelSum(self.state, nu)
         for i, p in supportFootTask.items():
-            feetTarget[i] = p
+            feetTarget[i] = pinocchio.SE3ToXYZQUAT(p)
 
             # Place the feet
             self._add_foot_tracking_cost(
@@ -819,7 +819,7 @@ class SimpleBipedGaitProblem:
             self._add_wrench_cone_limit(i, costModel)
 
         for i, params in swingFootTask.items():
-            feetTarget[i] = params["p"]
+            feetTarget[i] = pinocchio.SE3ToXYZQUAT(params["p"])
 
             # Place the feet
             self._add_foot_tracking_cost(
