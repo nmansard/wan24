@@ -85,7 +85,10 @@ class TabbedFigure(QtWidgets.QMainWindow):
     def exec_qt_app(qt_app: tp.Optional[QtWidgets.QApplication] = None) -> tp.NoReturn:
         if qt_app is None:
             qt_app = TabbedFigure.get_qt_app()
-        sys.exit(qt_app.exec_())
+        try:
+            qt_app.exec_()
+        except:
+            pass
 
     def add_figure(self, name, fig, tab_name = None):
         '''
