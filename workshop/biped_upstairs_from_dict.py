@@ -490,7 +490,7 @@ class SimpleBipedGaitProblem:
             self.state,
             i,
             pinocchio.XYZQUATToSE3(target),
-            pinocchio.LOCAL_WORLD_ALIGNED,
+            pinocchio.LOCAL,
             contactModel.nu,
             np.array(self.options["contact"]["baumgarte"]["gains"]),
         )
@@ -516,7 +516,7 @@ class SimpleBipedGaitProblem:
             self.state,
             i,
             pinocchio.Motion.Zero(),
-            pinocchio.LOCAL_WORLD_ALIGNED,
+            pinocchio.LOCAL,
             costs.nu,
         )
         impulseFootVelCost = crocoddyl.CostModelResidual(self.state, frameVelocityResidual)
@@ -628,7 +628,8 @@ class SimpleBipedGaitProblem:
             else:
                 ctrlResidual = crocoddyl.ResidualModelJointEffort(self.state, self.actuation, nu)
             ctrlReg = crocoddyl.CostModelResidual(self.state, ctrlResidual)
-            costModel.addCost("ctrlReg", ctrlReg, self.reg_opts["joint"]["torque"])
+            if not np.isclose(self.reg_opts["joint"]["torque"], 0):
+                costModel.addCost("ctrlReg", ctrlReg, self.reg_opts["joint"]["torque"])
 
         # Joint position and velocity limits
         xlb = np.concatenate(
@@ -796,12 +797,12 @@ class SimpleBipedGaitProblem:
         impulseModel = crocoddyl.ImpulseModelMultiple(self.state)
         for i in supportFootTask.keys():
             supportContactModel = crocoddyl.ImpulseModel6D(
-                self.state, i, pinocchio.LOCAL_WORLD_ALIGNED
+                self.state, i, pinocchio.LOCAL
             )
             impulseModel.addImpulse(self.rmodel.frames[i].name + "_impulse", supportContactModel)
         for i in swingFootTask.keys():
             supportContactModel = crocoddyl.ImpulseModel6D(
-                self.state, i, pinocchio.LOCAL_WORLD_ALIGNED
+                self.state, i, pinocchio.LOCAL
             )
             impulseModel.addImpulse(self.rmodel.frames[i].name + "_impulse", supportContactModel)
 
