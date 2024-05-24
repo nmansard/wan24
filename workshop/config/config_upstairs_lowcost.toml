@@ -3,6 +3,9 @@
 weight = 0
 r = 0.97
 
+[constraint.hard]
+use = true
+
 [constraint.torque.limit]
 weight = 0
 r = 1.0
