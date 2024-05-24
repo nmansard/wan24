@@ -240,12 +240,6 @@ if GEN_GUESS:
     with open(initial_guess_path, "wb") as outp:
         pickle.dump({"xs": solver.xs, "us": solver.us}, outp, pickle.HIGHEST_PROTOCOL)
 
-# Display the entire motion
-if WITHDISPLAY:
-    display.rate = -1
-    display.freq = 1
-    while True:
-        display.displayFromSolver(solver)
 
 # Plotting the entire motion
 if WITHPLOT:
@@ -297,3 +291,11 @@ if CONVERT:
     scenario = build_scenario(graph, trajectories)
 
     scenario.to_json_file(f"upstairs_{FLYING_SIDE}_crocoddyl" + scenario.canonical_filename())
+
+
+# Display the entire motion
+if WITHDISPLAY:
+    display.rate = -1
+    display.freq = 1
+    while True:
+        display.displayFromSolver(solver)
