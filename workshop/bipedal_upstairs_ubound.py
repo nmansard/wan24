@@ -176,16 +176,16 @@ problem, feetTargets, comTargets = gait.createUpstairsProblem(
 )
 # solver = crocoddyl.SolverIpopt(
 # solver = crocoddyl.SolverKKT(
-solver = crocoddyl.SolverBoxFDDP(problem)
-solver.th_stop = 1e-9
+# solver = crocoddyl.SolverBoxFDDP(problem)
+# solver.th_stop = 1e-9
 
-# solver = mim_solvers.SolverSQP(problem)
-# solver.termination_tolerance = 1e-3         # Termination criteria (KKT residual)
-# solver.max_qp_iters = 1000                  # Maximum number of QP iteration
-# solver.eps_abs = 1e-5                       # QP termination absolute criteria, 1e-9
-# solver.eps_rel = 0.                         # QP termination absolute criteria
-# solver.use_filter_line_search = True        # True by default, False = use merit function
-# solver.with_callbacks = True
+solver = mim_solvers.SolverCSQP(problem)
+solver.termination_tolerance = 1e-2         # Termination criteria (KKT residual)
+solver.max_qp_iters = 1000                  # Maximum number of QP iteration
+solver.eps_abs = 1e-5                       # QP termination absolute criteria, 1e-9
+solver.eps_rel = 0.                         # QP termination absolute criteria
+solver.use_filter_line_search = True        # True by default, False = use merit function
+solver.with_callbacks = True
 
 from repr_ocp import reprProblem
 reprFilename =  f"/tmp/bipedal_upstars-{VERSION}-repr.ascii"
@@ -232,7 +232,7 @@ else:
     xs = [x0] * (solver.problem.T + 1)
     us = solver.problem.quasiStatic([x0] * solver.problem.T)
 
-if not solver.solve(xs, us, 200, False, 0.1):
+if not solver.solve(xs, us, 100, False, 0.1):
     print("[WARNING] SOLVER DID NOT CONVERGE.")
 
 # Save guess

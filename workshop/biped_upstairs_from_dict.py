@@ -659,10 +659,9 @@ class SimpleBipedGaitProblem:
 
         bounds = crocoddyl.ActivationBounds(xlb, xub, self.constraint_opts["joint"]["limit"]["r"])
         xLimitResidual = crocoddyl.ResidualModelState(self.state, nu)
-        xLimitActivation = crocoddyl.ActivationModelQuadraticBarrier(bounds)
-        limitCost = crocoddyl.CostModelResidual(self.state, xLimitActivation, xLimitResidual)
-        if not np.isclose(self.constraint_opts["joint"]["limit"]["weight"], 0):
-            costModel.addCost("xLimitCost", limitCost, self.constraint_opts["joint"]["limit"]["weight"])
+        jointConstraint = crocoddyl.ConstraintModelResidual(self.state, xLimitResidual, xlb, xub)
+        constraintManager = crocoddyl.ConstraintModelManager(self.state, nu)
+        constraintManager.addConstraint("joint_wall", jointConstraint)
 
         if impulseModel is None:
             # Ctrl limits
@@ -685,7 +684,8 @@ class SimpleBipedGaitProblem:
             model = crocoddyl.ActionModelImpulseFwdDynamics(
                 self.state,
                 impulseModel,
-                costModel,  # constraintManager
+                costModel, 
+                constraintManager,
                 0.0,
                 0.0,
                 True
@@ -698,7 +698,7 @@ class SimpleBipedGaitProblem:
                     self.actuation,
                     contactModel,
                     costModel,
-                    # constraintManager,
+                    constraintManager,
                     0.0,
                     True,
                 )
@@ -707,7 +707,8 @@ class SimpleBipedGaitProblem:
                     self.state,
                     self.actuation,
                     contactModel,
-                    costModel,  # constraintManager
+                    costModel,
+                    constraintManager
                 )
             # Use integration scheme to convert differential (continuous) to discrete dynamics (the simpler the faster)
             if self._control == "one":
