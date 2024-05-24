@@ -799,6 +799,11 @@ class SimpleBipedGaitProblem:
                 self.state, i, pinocchio.LOCAL_WORLD_ALIGNED
             )
             impulseModel.addImpulse(self.rmodel.frames[i].name + "_impulse", supportContactModel)
+        for i in swingFootTask.keys():
+            supportContactModel = crocoddyl.ImpulseModel6D(
+                self.state, i, pinocchio.LOCAL_WORLD_ALIGNED
+            )
+            impulseModel.addImpulse(self.rmodel.frames[i].name + "_impulse", supportContactModel)
 
         # Get costs
         costModel, stateWeights = self.get_foot_switch_costs(
