@@ -2,12 +2,12 @@ import crocoddyl
 import numpy as np
 import matplotlib.pylab as plt
 import unittest
-from tp5.unicycle_utils import plotUnicycleSolution
+from tp3.unicycle_utils import plotUnicycleSolution
 
 # %jupyter_snippet hyperparams
 ### HYPER PARAMS: horizon and initial state
 T  = 100
-x0 = np.array([-1,-1,1])
+x0 = np.array([-1,-10,1])
 # %end_jupyter_snippet
 
 ### PROBLEM DEFINITION
@@ -28,6 +28,7 @@ problem = crocoddyl.ShootingProblem(x0, [ model ] * T, model_term)
 # Select the solver for this problem
 ddp = crocoddyl.SolverDDP(problem)
 # %end_jupyter_snippet
+ddp.th_stop=1e-15
 
 # %jupyter_snippet callback
 # Add solvers for verbosity and plots
@@ -37,7 +38,7 @@ ddp.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
 ### SOLVE THE PROBLEM
 
 # %jupyter_snippet solve
-done = ddp.solve()
+done = ddp.solve([],[],maxiter=1000)
 assert(done)
 # %end_jupyter_snippet
 

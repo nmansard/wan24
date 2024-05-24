@@ -26,6 +26,8 @@ elif "V3" in sys.argv:
     VERSION = "V3"
 elif "V4" in sys.argv:
     VERSION = "V4"
+elif "V5" in sys.argv:
+    VERSION = "V5"
 elif "lowcost" in sys.argv:
     VERSION = "lowcost"
 else:
@@ -175,7 +177,7 @@ problem, feetTargets, comTargets = gait.createUpstairsProblem(
 # solver = crocoddyl.SolverIpopt(
 # solver = crocoddyl.SolverKKT(
 solver = crocoddyl.SolverBoxFDDP(problem)
-# solver.th_stop = 1e-7
+solver.th_stop = 1e-9
 
 # solver = mim_solvers.SolverSQP(problem)
 # solver.termination_tolerance = 1e-3         # Termination criteria (KKT residual)

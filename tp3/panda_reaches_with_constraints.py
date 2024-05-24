@@ -174,7 +174,7 @@ plt.legend(['x', 'y', 'z'])
 print('Type plt.show() to display the result.')
 
 # %jupyter_snippet animate
-# Visualizing the solution in gepetto-viewer
+# Visualizing the solution in meshcat
 viz.play([x[:robot.model.nq] for x in solver.xs],TIME_STEP)
 # %end_jupyter_snippet
 

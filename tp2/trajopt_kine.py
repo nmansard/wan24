@@ -31,7 +31,7 @@ tool_frameName = "tool0"
 # %end_jupyter_snippet
 
 # %jupyter_snippet hyper
-T = 10
+T = 30
 w_run = 0.1
 w_term = 1
 # %end_jupyter_snippet
@@ -138,3 +138,26 @@ except:
 print("***** Display the resulting trajectory ...")
 displayScene(robot.q0, 1)
 displayTraj(sol_qs,1e-1)
+
+
+
+var_ls =  opti.variable(model.nq)
+lag = totalcost
+lag += var_ls.T@(var_qs[0]-robot.q0)
+
+variables = var_qs + [var_ls]
+K = [ [0 for v1 in variables ] for v2 in variables ]
+sols = sol_qs + [ np.zeros(model.nq) ]
+for i1,v1 in enumerate(variables):
+    for i2,v2 in enumerate(variables):
+        d = casadi.jacobian(casadi.jacobian(lag,v1),v2)
+        for v,s in zip(variables,sols):
+            d = casadi.substitute(d,v,s)
+        K[i1][i2] = np.array(casadi.evalf(d))
+
+K=np.vstack([ np.hstack(row) for row in K ])
+
+
+import matplotlib.pylab as plt
+plt.imshow(K)
+plt.show()

@@ -1876,6 +1876,34 @@
   0.        0.        0.        0.        0.        0.        0.
   0.        0.      ]
 *t=76
+ (impact dynamics) 
+=== Contact
+  - left_sole_link_impulse: {ImpulseModel^D {frame=left_sole_link, type=2}} (impulse)
+  - right_sole_link_impulse: {ImpulseModel^D {frame=right_sole_link, type=2}} (impulse)
+=== Cost
+  - left_sole_link_footTrack: {w=100, CostModelResidual {ResidualModelFramePlacement {frame=left_sole_link, tref=[0.38, 0.035, 0.1], qref=[-0.00085, 0, 0, 1]}, ActivationModelQuad {nr=6}}}
+		wact = [1. 1. 1. 1. 1. 1.]
+		ref =   R =
+        1        -0         0
+        0  0.999999  0.001708
+       -0 -0.001708  0.999999
+  p =  0.381153 0.0348172  0.099998
+
+  - left_sole_link_impulseVel: {w=1000, CostModelResidual {ResidualModelFrameVelocity {frame=left_sole_link, vref=[0, 0, 0, 0, 0, 0]}, ActivationModelQuad {nr=6}}}
+		ref =   v = 0 0 0
+  w = 0 0 0
+
+  - stateReg: {w=0.01, CostModelResidual {ResidualModelState, ActivationModelQuad {nr=36}}}
+		wact = [0.     0.     0.     0.01   0.01   0.01   0.0001 0.0001 0.0001 0.0001
+ 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001
+ 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001
+ 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001]
+		ref = [ 0.        0.        1.01927   0.        0.        0.        1.
+  0.        0.       -0.411354  0.859395 -0.448041 -0.001708  0.
+  0.       -0.411354  0.859395 -0.448041 -0.001708  0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  0.        0.      ]
 *t=77
 === Contact
   - left_sole_link_contact: {ContactModel6D {frame=left_sole_link, type=2}}
@@ -3754,6 +3782,34 @@
   0.        0.        0.        0.        0.        0.        0.
   0.        0.      ]
 *t=153
+ (impact dynamics) 
+=== Contact
+  - left_sole_link_impulse: {ImpulseModel^D {frame=left_sole_link, type=2}} (impulse)
+  - right_sole_link_impulse: {ImpulseModel^D {frame=right_sole_link, type=2}} (impulse)
+=== Cost
+  - right_sole_link_footTrack: {w=100, CostModelResidual {ResidualModelFramePlacement {frame=right_sole_link, tref=[0.53, -0.085, 0.1], qref=[-0.00085, 0, 0, 1]}, ActivationModelQuad {nr=6}}}
+		wact = [1. 1. 1. 1. 1. 1.]
+		ref =   R =
+        1        -0         0
+        0  0.999999  0.001708
+       -0 -0.001708  0.999999
+  p =   0.531153 -0.0851828   0.099998
+
+  - right_sole_link_impulseVel: {w=1000, CostModelResidual {ResidualModelFrameVelocity {frame=right_sole_link, vref=[0, 0, 0, 0, 0, 0]}, ActivationModelQuad {nr=6}}}
+		ref =   v = 0 0 0
+  w = 0 0 0
+
+  - stateReg: {w=0.01, CostModelResidual {ResidualModelState, ActivationModelQuad {nr=36}}}
+		wact = [0.     0.     0.     0.01   0.01   0.01   0.0001 0.0001 0.0001 0.0001
+ 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001
+ 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001
+ 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001]
+		ref = [ 0.        0.        1.01927   0.        0.        0.        1.
+  0.        0.       -0.411354  0.859395 -0.448041 -0.001708  0.
+  0.       -0.411354  0.859395 -0.448041 -0.001708  0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  0.        0.      ]
 *t=154
 === Contact
   - left_sole_link_contact: {ContactModel6D {frame=left_sole_link, type=2}}
@@ -5632,6 +5688,34 @@
   0.        0.        0.        0.        0.        0.        0.
   0.        0.      ]
 *t=230
+ (impact dynamics) 
+=== Contact
+  - left_sole_link_impulse: {ImpulseModel^D {frame=left_sole_link, type=2}} (impulse)
+  - right_sole_link_impulse: {ImpulseModel^D {frame=right_sole_link, type=2}} (impulse)
+=== Cost
+  - left_sole_link_footTrack: {w=100, CostModelResidual {ResidualModelFramePlacement {frame=left_sole_link, tref=[0.53, 0.087, 0.096], qref=[-0.00085, 0, 0, 1]}, ActivationModelQuad {nr=6}}}
+		wact = [1. 1. 1. 1. 1. 1.]
+		ref =   R =
+        1        -0         0
+        0  0.999999  0.001708
+       -0 -0.001708  0.999999
+  p =  0.531153 0.0868581  0.095998
+
+  - left_sole_link_impulseVel: {w=1000, CostModelResidual {ResidualModelFrameVelocity {frame=left_sole_link, vref=[0, 0, 0, 0, 0, 0]}, ActivationModelQuad {nr=6}}}
+		ref =   v = 0 0 0
+  w = 0 0 0
+
+  - stateReg: {w=0.01, CostModelResidual {ResidualModelState, ActivationModelQuad {nr=36}}}
+		wact = [0.     0.     0.     0.01   0.01   0.01   0.0001 0.0001 0.0001 0.0001
+ 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001
+ 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001
+ 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001]
+		ref = [ 0.        0.        1.01927   0.        0.        0.        1.
+  0.        0.       -0.411354  0.859395 -0.448041 -0.001708  0.
+  0.       -0.411354  0.859395 -0.448041 -0.001708  0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  0.        0.        0.        0.        0.        0.        0.
+  0.        0.      ]
 *t=231
 === Contact
   - left_sole_link_contact: {ContactModel6D {frame=left_sole_link, type=2}}

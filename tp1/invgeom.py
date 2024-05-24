@@ -129,8 +129,9 @@ except:
 # %end_jupyter_snippet
 
 # %jupyter_snippet check_final_placement
+pin.framesForwardKinematics(model,data,sol_q)
 print(
     "The robot finally reached effector placement at\n",
-    robot.placement(sol_q, 6),
+    data.oMf[tool_id]
 )
 # %end_jupyter_snippet

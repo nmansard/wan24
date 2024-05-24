@@ -8,14 +8,45 @@ from __future__ import print_function
 import crocoddyl as croc
 
 
-def reprAction(amodel):
+def reprAction(model):
+    if isinstance(model,croc.IntegratedActionModelEuler): return reprIntegratedAction(model)
+    elif isinstance(model,croc.ActionModelImpulseFwdDynamics): return reprImpactAction(model)
+    else: return "-- action not representable --"
+
+    
+def reprIntegratedAction(amodel):
     """Save all the action details in a text file."""
-    if not isinstance(amodel,croc.IntegratedActionModelEuler): return ""
+    assert isinstance(amodel,croc.IntegratedActionModelEuler)
+    #if not isinstance(amodel,croc.IntegratedActionModelEuler): return ""
     str = ""
     dmodel = amodel.differential
     str += "=== Contact\n"
     for citem in dmodel.contacts.contacts:
         str += "  - %s: %s\n" % (citem.key(), citem.data())
+    str += "=== Cost\n"
+    for citem in dmodel.costs.costs:
+        str += "  - %s: %s\n" % (citem.key(), citem.data())
+        cost = citem.data().cost
+        if isinstance(cost.activation, croc.ActivationModelWeightedQuad):
+            str += "\t\twact = %s\n" % cost.activation.weights
+        if isinstance(cost.activation, croc.ActivationModelQuadraticBarrier):
+            str += "\t\tlower = %s\n" % cost.activation.bounds.lb
+            str += "\t\tupper = %s\n" % cost.activation.bounds.lb
+        try:
+            str += "\t\tref = %s\n" % cost.residual.reference
+        except AttributeError:
+            pass
+    return str
+
+def reprImpactAction(dmodel):
+    """Save all the action details in a text file."""
+    #if not isinstance(amodel,croc.IntegratedActionModelEuler): return ""
+    assert isinstance(dmodel,croc.ActionModelImpulseFwdDynamics)
+
+    str = " (impact dynamics) \n"
+    str += "=== Contact\n"
+    for citem in dmodel.impulses.impulses:
+        str += "  - %s: %s (impulse)\n" % (citem.key(), citem.data())
     str += "=== Cost\n"
     for citem in dmodel.costs.costs:
         str += "  - %s: %s\n" % (citem.key(), citem.data())
