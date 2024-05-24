@@ -15,23 +15,26 @@ from biped_upstairs_from_dict import SimpleBipedGaitProblem as Upstairs
 import crocoddyl
 import mim_solvers
 
-WITHDISPLAY = "display" in sys.argv or "CROCODDYL_DISPLAY" in os.environ
-WITHPLOT = "plot" in sys.argv or "CROCODDYL_PLOT" in os.environ
+#  WITHDISPLAY = "display" in sys.argv or "CROCODDYL_DISPLAY" in os.environ
+#  WITHPLOT = "plot" in sys.argv or "CROCODDYL_PLOT" in os.environ
+WITHDISPLAY = True
+WITHPLOT = True
 CONVERT = "conv" in sys.argv or "CROCODDYL_CONV" in os.environ
 GEN_GUESS = "gen_guess" in sys.argv
 NO_IMPULSE = "no_impulse" in sys.argv
-if "V2" in sys.argv:
-    VERSION = "V2"
-elif "V3" in sys.argv:
-    VERSION = "V3"
-elif "V4" in sys.argv:
-    VERSION = "V4"
-elif "V5" in sys.argv:
-    VERSION = "V5"
-elif "lowcost" in sys.argv:
-    VERSION = "lowcost"
-else:
-    VERSION = False
+VERSION = "lowcost"
+#  if "V2" in sys.argv:
+    #  VERSION = "V2"
+#  elif "V3" in sys.argv:
+    #  VERSION = "V3"
+#  elif "V4" in sys.argv:
+    #  VERSION = "V4"
+#  elif "V5" in sys.argv:
+    #  VERSION = "V5"
+#  elif "lowcost" in sys.argv:
+    #  VERSION = "lowcost"
+#  else:
+    #  VERSION = False
 FLYING_SIDE = "right" if "right" in sys.argv else "left"
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 EVE = False
@@ -96,7 +99,6 @@ else:
     # lims *= 0.5  # reduced artificially the torque limits
     talos_legs.model.lowerPositionLimit[-2:] /= 2
     talos_legs.model.lowerPositionLimit[-2-6:-2] /= 2
-    lims = talos_legs.model.effortLimit
     talos_legs.model.effortLimit = lims
     robot = talos_legs
     q0 = robot.model.referenceConfigurations["half_sitting"].copy()
@@ -108,32 +110,20 @@ v0 = pnc.utils.zero(robot.model.nv)
 x0 = np.concatenate([q0, v0])
 
 # Setting up the 3d walking problem
-if VERSION:
-    options = toml.load(f"config/config_upstairs_{str(VERSION)}.toml")
-    gait = Upstairs(
-        robot.model,
-        q0,
-        FLYING_SIDE,
-        rightFoot,
-        leftFoot,
-        options=options,
-        leftToe=leftToe,
-        rightToe=rightToe,
-        integrator="euler",
-        control="zero",
-        no_impulse=NO_IMPULSE,
-    )
-else:
-    gait = UpstairsV1(
-        robot.model,
-        q0,
-        rightFoot,
-        leftFoot,
-        leftToe=leftToe,
-        rightToe=rightToe,
-        integrator="euler",
-        control="zero",
-    )
+options = toml.load(f"config/config_upstairs_{str(VERSION)}.toml")
+gait = Upstairs(
+    robot.model,
+    q0,
+    FLYING_SIDE,
+    rightFoot,
+    leftFoot,
+    options=options,
+    leftToe=leftToe,
+    rightToe=rightToe,
+    integrator="euler",
+    control="zero",
+    no_impulse=NO_IMPULSE,
+)
 
 # Setting up all tasks
 PARAMS = {
@@ -147,19 +137,6 @@ PARAMS = {
     "supportKnots": 25,
 }
 cameraTF = [3.0, 3.68, 0.84, 0.2, 0.62, 0.72, 0.22]
-
-display = None
-if WITHDISPLAY:
-    if display is None:
-        try:
-            import gepetto
-
-            gepetto.corbaserver.Client()
-            display = crocoddyl.GepettoDisplay(
-                robot, 4, 4, cameraTF, frameNames=[rightFoot, leftFoot]
-            )
-        except Exception:
-            display = crocoddyl.MeshcatDisplay(robot, frameNames=[rightFoot, leftFoot])
 
 
 # Creating a walking problem
@@ -196,18 +173,7 @@ with open(reprFilename, "w") as f:
 
 # Added the callback functions
 print("*** SOLVE UPSTAIRS ***")
-if WITHDISPLAY and type(display) == crocoddyl.GepettoDisplay:
-    if WITHPLOT:
-        solver.setCallbacks(
-            [
-                crocoddyl.CallbackVerbose(),
-                crocoddyl.CallbackLogger(),
-                crocoddyl.CallbackDisplay(display),
-            ]
-        )
-    else:
-        solver.setCallbacks([crocoddyl.CallbackVerbose(), crocoddyl.CallbackDisplay(display)])
-elif WITHPLOT:
+if WITHPLOT:
     solver.setCallbacks(
         [
             crocoddyl.CallbackVerbose(),
@@ -240,28 +206,9 @@ if GEN_GUESS:
     with open(initial_guess_path, "wb") as outp:
         pickle.dump({"xs": solver.xs, "us": solver.us}, outp, pickle.HIGHEST_PROTOCOL)
 
-# Display the entire motion
-if WITHDISPLAY:
-    display.rate = -1
-    display.freq = 1
-    while True:
-        display.displayFromSolver(solver)
-
 # Plotting the entire motion
 if WITHPLOT:
     log = solver.getCallbacks()[1]
-    crocoddyl.plotConvergence(
-        log.costs,
-        log.pregs,
-        log.dregs,
-        log.grads,
-        log.stops,
-        log.steps,
-        figTitle="Upstairs",
-        figIndex=0,
-        show=True,
-    )
-
     plotSolution(
         solver,
         bounds=True,
@@ -297,3 +244,21 @@ if CONVERT:
     scenario = build_scenario(graph, trajectories)
 
     scenario.to_json_file(f"upstairs_{FLYING_SIDE}_crocoddyl" + scenario.canonical_filename())
+
+# Display the entire motion
+display = None
+if WITHDISPLAY:
+    if display is None:
+        try:
+            import gepetto
+
+            gepetto.corbaserver.Client()
+            display = crocoddyl.GepettoDisplay(
+                robot, 4, 4, cameraTF, frameNames=[rightFoot, leftFoot]
+            )
+        except Exception:
+            display = crocoddyl.MeshcatDisplay(robot, frameNames=[rightFoot, leftFoot])
+    display.rate = -1
+    display.freq = 1
+    while True:
+        display.displayFromSolver(solver)
